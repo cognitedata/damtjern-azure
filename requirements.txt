@@ -5,3 +5,4 @@
 azure-functions
 cognite-sdk
 numpy
+pytz

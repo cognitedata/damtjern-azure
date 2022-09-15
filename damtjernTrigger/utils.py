@@ -1,17 +1,7 @@
+import numpy as np
 from cognite.client import CogniteClient, ClientConfig
 from cognite.client.credentials import OAuthClientCredentials
-
-def upload_message_to_cdf(message:str):
-    client = get_cognite_client()
-    
-    timestamp = message["key"]
-    current = message["value"] 
-    waterheight = current_to_waterheight(current)
-    return 
-    #TODO create datapoints and upload to cdf
-   
-def current_to_waterheight(current:float):
-    return 9-(18-current)*0.45
+import os
 
 def get_cognite_client()-> CogniteClient:
     # Contact Project Administrator to get these
@@ -29,3 +19,16 @@ def get_cognite_client()-> CogniteClient:
     cnf = ClientConfig(client_name="my-special-client", project=COGNITE_PROJECT, credentials=creds, base_url=BASE_URL)
 
     return CogniteClient(cnf)
+
+def pressure_to_waterheight(pressure_value:float):
+    return 9.73 - (18.459 - pressure_value) * 0.46;
+
+def pressure_to_waterheight_interpolated(pressure_value: float):
+    manual_readings = [5.02, 9.19, 9.42, 9.68, 9.73, 9.95]
+    digital_readings = [8.2, 17.274, 17.708, 18.345, 18.459, 18.641]
+    default_linear_factor = 0.46
+    if pressure_value < digital_readings[0]:
+        return manual_readings[0] + (pressure_value-digital_readings[0]) * default_linear_factor
+    elif pressure_value > digital_readings[-1]:
+        return manual_readings[-1] + (pressure_value-digital_readings[-1]) * default_linear_factor
+    return np.interp(pressure_value, digital_readings, manual_readings)
